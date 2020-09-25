@@ -7,6 +7,9 @@
 
 ##### External modules required:
 requests
+
 beautifulsoup4
+
 icalendar
+
 pytz
