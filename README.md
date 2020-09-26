@@ -14,6 +14,6 @@
 ##### pip install requests beautifulsoup4 icalendar pytz
 
 ### Known Issues:
-* Problem: Login failed even though credentials are correct
-* Cause: On windows 10, pasting the password in the terminal doesn't work for some reason due to the "getpass" module.
-* Solution: You will need to type the password into the terminal (or just edit your username and password directly into the script)
+* Problem: Login failed even though credentials are correct.
+* Cause: CTRL-V doesn't work for pasting password on Windows 10.
+* Solution: You can right click to paste instead, which does work, or type manually.
