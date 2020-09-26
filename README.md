@@ -13,3 +13,5 @@ beautifulsoup4
 icalendar
 
 pytz
+
+##### pip install requests beautifulsoup4 icalendar pytz
