@@ -37,25 +37,31 @@ login_url = "https://timetables.kcl.ac.uk/KCLSWS/SDB2021RDB/Login.aspx"
 url = "https://timetables.kcl.ac.uk/kclsws/SDB2021RDB/default.aspx"
 timetable_url = "https://timetables.kcl.ac.uk/kclsws/SDB2021RDB/showtimetable.aspx"
 
-#Session auto manages stuff like cookies and connection
-with requests.Session() as session:
-    response = session.get(login_url)
-    soup = bs(response.text, features="html.parser")
+def default_payload(soup):
     view_state = soup.find("input", id="__VIEWSTATE")["value"]
     view_state_generator = soup.find("input", id="__VIEWSTATEGENERATOR")["value"]
     event_validation = soup.find("input", id="__EVENTVALIDATION")["value"]
 
-    login_payload = {
-        "tUserName": username,
-        "tPassword": password,
-        "bLogin": "Login",
+    payload = {
         "__VIEWSTATE": view_state,
         "__VIEWSTATEGENERATOR": view_state_generator,
         "__EVENTVALIDATION": event_validation,
-        "__EVENTARGUMENT": "",
-        "__EVENTTARGET": "",
-        "__LASTFOCUS": ""
+        "__EVENTARGUMENT": ""
     }
+
+    return payload
+
+#Session auto manages stuff like cookies and connection
+with requests.Session() as session:
+    response = session.get(login_url)
+    soup = bs(response.text, features="html.parser")
+
+    login_payload = default_payload(soup)
+    login_payload["tUserName"] = username
+    login_payload["tPassword"] = password
+    login_payload["bLogin"] = "Login"
+    login_payload["__EVENTTARGET"] = ""
+    login_payload["__LASTFOCUS"] = ""
 
     response = session.post(login_url, login_payload)
     if "Your King's ID (eg:- k1234567) and password must not be blank" in response.text:
@@ -67,40 +73,22 @@ with requests.Session() as session:
 
     soup = bs(response.text, features="html.parser")
 
-    view_state = soup.find("input", id="__VIEWSTATE")["value"]
-    view_state_generator = soup.find("input", id="__VIEWSTATEGENERATOR")["value"]
-    event_validation = soup.find("input", id="__EVENTVALIDATION")["value"]
-
-    timetable_request_payload_1 = {
-        "__VIEWSTATE": view_state,
-        "__VIEWSTATEGENERATOR": view_state_generator,
-        "__EVENTVALIDATION": event_validation,
-        "__EVENTARGUMENT": "",
-        "__EVENTTARGET": "LinkBtn_studentMyTimetable",
-        "tLinkType": "information"
-    }
+    timetable_request_payload_1 = default_payload(soup)
+    timetable_request_payload_1["__EVENTTARGET"] = "LinkBtn_studentMyTimetable"
+    timetable_request_payload_1["tLinkType"] = "information"
 
     response = session.post(url, timetable_request_payload_1)
     soup = bs(response.text, features="html.parser")
-    
-    view_state = soup.find("input", id="__VIEWSTATE")["value"]
-    view_state_generator = soup.find("input", id="__VIEWSTATEGENERATOR")["value"]
-    event_validation = soup.find("input", id="__EVENTVALIDATION")["value"]
 
-    timetable_request_payload_2 = {
-        "__VIEWSTATE": view_state,
-        "__VIEWSTATEGENERATOR": view_state_generator,
-        "__EVENTVALIDATION": event_validation,
-        "__EVENTARGUMENT": "",
-        "__EVENTTARGET": "",
-        "__LASTFOCUS": "",
-        "tLinkType": "studentMyTimetable",
-        "dlObject": username[1:],
-        "lbWeeks": "6;7;8;9;10;11;12;13;14;15;16;17",
-        "dlPeriod": "0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;23;24;25;26;27;28",
-        "RadioType": "textspreadsheet;swsurl;SWSCUST+Student+TextSpreadsheet",
-        "bGetTimeTable": "View Timetable"
-    }
+    timetable_request_payload_2 = default_payload(soup)
+    timetable_request_payload_2["__EVENTTARGET"] = ""
+    timetable_request_payload_2["__LASTFOCUS"] = ""
+    timetable_request_payload_2["tLinkType"] = "studentMyTimetable"
+    timetable_request_payload_2["dlObject"] = username[1:]
+    timetable_request_payload_2["lbWeeks"] = "6;7;8;9;10;11;12;13;14;15;16;17"
+    timetable_request_payload_2["dlPeriod"] = "0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;23;24;25;26;27;28"
+    timetable_request_payload_2["RadioType"] = "textspreadsheet;swsurl;SWSCUST+Student+TextSpreadsheet"
+    timetable_request_payload_2["bGetTimeTable"] = "View Timetable"
 
     response = session.post(url, timetable_request_payload_2)
     response = session.post(timetable_url)
@@ -155,4 +143,3 @@ with open("KCL-Timetable.ics", "wb") as timetable:
     timetable.write(calendar.to_ical())
 
 print(f"\n\"KCL-Timetable.ics\" file saved at {os.getcwd()}")
-
