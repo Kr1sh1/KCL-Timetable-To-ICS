@@ -1,6 +1,8 @@
 #!/usr/bin/python3
-import requests
 import sys
+assert sys.version_info >= (3, 6, 0), "Python version too low."
+
+import requests
 import os
 
 from bs4 import BeautifulSoup as bs
