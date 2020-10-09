@@ -4,6 +4,8 @@ assert sys.version_info >= (3, 6, 0), "Python version too low."
 
 import requests
 import os
+import pickle
+import hashlib
 
 from bs4 import BeautifulSoup as bs
 from icalendar import Event, Calendar
@@ -112,8 +114,28 @@ for day_events in tables:
         columns = event.find_all("td")
         classes.append(Class_Event([column.text for column in columns]))
 
+#If the ICS file exists already, check if the timetable has changed or not.
+if os.path.isfile("KCL-Timetable.ics"):
+    with open("KCL-Timetable.ics", "rb") as file_:
+        calendar = Calendar.from_ical(file_.read())
+        try:
+            uid = calendar["uid"]
+        except KeyError:
+            print("Old ICS file format detected. Changes in your timetable will be detected in future runs.")
+        else:
+            hash_digest = hashlib.sha256(pickle.dumps(classes)).digest()
+            int_digest = int.from_bytes(hash_digest, byteorder="big")
+
+            if int_digest == int(uid):
+                print("Your timetable hasn't changed.")
+                sys.exit(0)
+
 #Creating ics file format
 calendar = Calendar()
+
+hash_digest = hashlib.sha256(pickle.dumps(classes)).digest()
+int_digest = int.from_bytes(hash_digest, byteorder="big")
+calendar["uid"] = int_digest
 
 for event in classes:
     dates = event.activity_date.split(";")
@@ -142,4 +164,4 @@ for event in classes:
 with open("KCL-Timetable.ics", "wb") as timetable:
     timetable.write(calendar.to_ical())
 
-print(f"\n\"KCL-Timetable.ics\" file saved at {os.getcwd()}")
+print(f"\n\"KCL-Timetable.ics\" file updated/saved at {os.getcwd()}")
