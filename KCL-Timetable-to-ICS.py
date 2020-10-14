@@ -39,7 +39,7 @@ login_url = "https://timetables.kcl.ac.uk/KCLSWS/SDB2021RDB/Login.aspx"
 url = "https://timetables.kcl.ac.uk/kclsws/SDB2021RDB/default.aspx"
 timetable_url = "https://timetables.kcl.ac.uk/kclsws/SDB2021RDB/showtimetable.aspx"
 
-def default_payload(soup):
+def default_args(soup):
     view_state = soup.find("input", id="__VIEWSTATE")["value"]
     view_state_generator = soup.find("input", id="__VIEWSTATEGENERATOR")["value"]
     event_validation = soup.find("input", id="__EVENTVALIDATION")["value"]
@@ -53,19 +53,23 @@ def default_payload(soup):
 
     return payload
 
-#Session auto manages stuff like cookies and connection
-with requests.Session() as session:
-    response = session.get(login_url)
-    soup = bs(response.text, features="html.parser")
-
-    login_payload = default_payload(soup)
+def login_args(soup):
+    login_payload = default_args(soup)
     login_payload["tUserName"] = username
     login_payload["tPassword"] = password
     login_payload["bLogin"] = "Login"
     login_payload["__EVENTTARGET"] = ""
     login_payload["__LASTFOCUS"] = ""
 
-    response = session.post(login_url, login_payload)
+    return login_payload
+
+#Session auto manages stuff like cookies and connection
+with requests.Session() as session:
+    response = session.get(login_url)
+    soup = bs(response.text, features="html.parser")
+
+    response = session.post(login_url, login_args(soup))
+
     if "Your King's ID (eg:- k1234567) and password must not be blank" in response.text:
         print("Your King's ID (eg:- k1234567) and password must not be blank.")
         sys.exit(1)
@@ -75,14 +79,14 @@ with requests.Session() as session:
 
     soup = bs(response.text, features="html.parser")
 
-    timetable_request_payload_1 = default_payload(soup)
+    timetable_request_payload_1 = default_args(soup)
     timetable_request_payload_1["__EVENTTARGET"] = "LinkBtn_studentMyTimetable"
     timetable_request_payload_1["tLinkType"] = "information"
 
     response = session.post(url, timetable_request_payload_1)
     soup = bs(response.text, features="html.parser")
 
-    timetable_request_payload_2 = default_payload(soup)
+    timetable_request_payload_2 = default_args(soup)
     timetable_request_payload_2["__EVENTTARGET"] = ""
     timetable_request_payload_2["__LASTFOCUS"] = ""
     timetable_request_payload_2["tLinkType"] = "studentMyTimetable"
