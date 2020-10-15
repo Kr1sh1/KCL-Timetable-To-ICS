@@ -118,6 +118,8 @@ for day_events in tables:
         columns = event.find_all("td")
         classes.append(Class_Event([column.text for column in columns]))
 
+action = "created"
+
 #If the ICS file exists already, check if the timetable has changed or not.
 if os.path.isfile("KCL-Timetable.ics"):
     with open("KCL-Timetable.ics", "rb") as file_:
@@ -133,6 +135,8 @@ if os.path.isfile("KCL-Timetable.ics"):
             if int_digest == int(uid):
                 print("Your timetable hasn't changed.")
                 sys.exit(0)
+
+            action = "updated"
 
 #Creating ics file format
 calendar = Calendar()
@@ -168,4 +172,4 @@ for event in classes:
 with open("KCL-Timetable.ics", "wb") as timetable:
     timetable.write(calendar.to_ical())
 
-print(f"\n\"KCL-Timetable.ics\" file updated/saved at {os.getcwd()}")
+print(f"\n\"KCL-Timetable.ics\" file {action} at {os.getcwd()}")
